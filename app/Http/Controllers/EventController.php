@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 
 class EventController extends BaseController
 {
-    public function eventStore(Request $request): RedirectResponse
+    /* public function eventStore(Request $request): RedirectResponse
     {
         $eventid = $request->id;
 
@@ -37,17 +37,45 @@ class EventController extends BaseController
         ];        
 
         Event::updateOrCreate(['id' => $eventid], $eventData);
-        return Redirect::away(URL::shopifyRoute('events'))->with('success', 'Event saved successfully !');
+        //return Redirect::away(URL::shopifyRoute('events'))->with('success', 'Event saved successfully !');
+    
+        //dd($request->all());
+    } */
+
+    public function store(Request $request)
+    {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'shop_id' => 'required|string',
+            'event_title' => 'required|string',
+            'event_type' => 'required|string',
+            'event_details' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'priority' => 'required|integer',
+            'discount_code' => 'nullable|string',
+        ]);
+
+        // Create a new event
+        $event = Event::create($validatedData);
+
+        return response()->json(['message' => 'Event added successfully', 'event' => $event], 201);
     }
 
-    function getEvents()
+    public function fetchEvents(Request $request)
+    {
+        $events = Event::orderBy('created_at', 'desc')->get();
+        return response()->json($events);
+    }
+
+    /* function getEvents()
     {       
         $currentShopId = auth()->user()->id;
         $events = Event::where('shop_id', $currentShopId)->orderBy('created_at', 'desc')->get();
         $this->fetchDiscountCodes();
 
         return view('pages.events', ['events' => $events,'discountCodesList' => $this->discountCodesList]);       
-    }
+    } */
 
     public function eventUpdateData($id)
     {
